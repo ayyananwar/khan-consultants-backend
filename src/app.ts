@@ -52,7 +52,7 @@ if (isProduction) {
   app.set('trust proxy', 1);
 }
 
-app.use(cors({
+const apiCors = cors({
   origin(origin, callback) {
     if (!origin) {
       callback(null, true);
@@ -71,7 +71,7 @@ app.use(cors({
 
     callback(new Error('Not allowed by CORS'));
   },
-}));
+});
 
 app.use(cookieParser());
 app.use(express.text({ type: 'text/plain', limit: '1mb' }));
@@ -112,7 +112,7 @@ app.get('/', (_req, res) => {
   });
 });
 
-app.use('/api/v1', apiRateLimiter);
+app.use('/api/v1', apiCors, apiRateLimiter);
 app.use('/admin', adminRateLimiter, adminCsrfProtection, adminRouter);
 app.use('/api/v1/health', healthRouter);
 app.use('/api/v1/contact', contactRouter);
