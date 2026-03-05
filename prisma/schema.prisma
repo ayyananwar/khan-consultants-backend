@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BirthSlot {
+  id         String   @id @default(cuid())
+  slotDate   DateTime
+  timeWindow String
+  maxSlots   Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([slotDate])
+  @@map("birth_slots")
+}
+
+model BirthBooking {
+  id                       String   @id @default(cuid())
+  bookingReference         String   @unique
+  status                   String   @default("confirmed")
+  submittedAtIst           String
+
+  fillerName               String
+  fillerPhone              String
+  fillerEmail              String
+  relationshipToApplicant  String
+
+  applicationType          String
+  applicantName            String
+  applicantDob             String
+  applicantPhone           String
+  applicantEmail           String
+
+  correctionEntries        Json
+  documentsSelected        Json
+
+  chosenSlotDate           DateTime?
+  chosenTimeWindow         String?
+
+  source                   String   @default("website")
+  notes                    String?
+
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@index([applicantPhone])
+  @@index([chosenSlotDate])
+  @@map("birth_bookings")
+}
+
+model ContactEnquiry {
+  id                String   @id @default(cuid())
+  contactReference  String   @unique
+  fullName          String
+  email             String
+  phone             String
+  serviceType       String?
+  preferredContact  String?
+  message           String
+  internalRemark    String?
+  status            String   @default("new")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([email])
+  @@index([phone])
+  @@map("contact_enquiries")
+}
+
+model ServiceEnquiry {
+  id                    String   @id @default(cuid())
+  enquiryReference      String   @unique
+  serviceType           String
+  subServiceType        String?
+
+  fullName              String
+  designation           String?
+  officialBusinessName  String
+  phone                 String
+  email                 String
+  alternateNumber       String?
+  businessAddress       String
+
+  preferredCommunication String
+  additionalNotes       String
+  consentAccepted       Boolean  @default(false)
+
+  formPayload           Json
+
+  status                String   @default("new")
+  internalRemark        String?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([serviceType])
+  @@index([phone])
+  @@index([email])
+  @@index([status])
+  @@map("service_enquiries")
+}
+
+model SystemSetting {
+  id           String   @id @default(cuid())
+  settingKey   String   @unique
+  settingValue String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("system_settings")
+}
