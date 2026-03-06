@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma.js';
 import { createBookingReference } from '../utils/references.js';
 import { getIstTimestamp } from '../utils/time.js';
 import { getBookingSettings } from '../lib/bookingSettings.js';
+import { sendBirthBookingConfirmationEmail } from '../lib/birthBookingEmail.js';
 
 const birthRouter = Router();
 
@@ -514,6 +515,10 @@ async function handleVerifyPaymentAndSave(body: Record<string, unknown>): Promis
 
     const relation = sanitizeText(formData.relation || 'self', 16).toLowerCase();
 
+    const mappedApplicationType = mapApplicationType(formData);
+    const applicantName = sanitizeText(formData.applicantName || '', 120);
+    const applicantEmail = sanitizeText(formData.applicantEmail || '', 160);
+
     await prisma.birthBooking.create({
       data: {
         bookingReference,
@@ -522,11 +527,11 @@ async function handleVerifyPaymentAndSave(body: Record<string, unknown>): Promis
         fillerName: sanitizeText(formData.fillerName || formData.applicantName || '', 120),
         fillerPhone: sanitizeText(formData.fillerPhone || formData.applicantPhone || '', 20),
         fillerEmail: sanitizeText(formData.fillerEmail || formData.applicantEmail || '', 160),
-        applicationType: mapApplicationType(formData),
-        applicantName: sanitizeText(formData.applicantName || '', 120),
+        applicationType: mappedApplicationType,
+        applicantName,
         applicantDob: sanitizeText(formData.applicantDob || '', 20),
         applicantPhone: sanitizeText(formData.applicantPhone || '', 20),
-        applicantEmail: sanitizeText(formData.applicantEmail || '', 160),
+        applicantEmail,
         relationshipToApplicant: relation === 'self' ? 'Self' : mapRelationship(formData),
         correctionEntries: Array.isArray(formData.correctionEntries) ? formData.correctionEntries : [],
         documentsSelected: {
@@ -538,6 +543,21 @@ async function handleVerifyPaymentAndSave(body: Record<string, unknown>): Promis
         notes: noteParts.join('\n'),
       },
     });
+
+    try {
+      await sendBirthBookingConfirmationEmail({
+        toEmail: applicantEmail,
+        applicantName,
+        bookingReference,
+        chosenThursday,
+        appointmentWindow: selectedAppointmentWindow,
+        paymentId,
+        applicationType: mappedApplicationType,
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.error(`[BirthBookingEmail] Failed for ${bookingReference}: ${reason}`);
+    }
 
     return {
       bookingReference,

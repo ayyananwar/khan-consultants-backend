@@ -75,6 +75,17 @@ RAZORPAY_KEY_ID=rzp_test_xxxxx
 RAZORPAY_KEY_SECRET=xxxxxxxx
 ```
 
+For customer booking confirmation emails (sent only after successful payment verification):
+
+```bash
+RESEND_API_KEY=re_xxxxx
+EMAIL_FROM="Khan Consultants <onboarding@resend.dev>"
+# Optional
+EMAIL_REPLY_TO=khanconsultants2025@gmail.com
+BOOKING_EMAIL_MAX_RETRIES=3
+BOOKING_EMAIL_RETRY_DELAY_MS=900
+```
+
 `BOOKING_FEE` and `APPOINTMENT_WINDOW` are now admin-managed via `/admin/settings` and stored in DB. Env values for these are only optional first-run fallbacks.
 
 ## Admin Dashboard (Phase 1)
@@ -132,5 +143,5 @@ Notes:
 
 - Birth action endpoint supports action payloads for slot, fee, order, and payment verification flow.
 - Service enquiry endpoint accepts JSON body only and does not support file uploads.
-- No email sending in backend parity flow yet.
+- Birth booking confirmation email is sent to the customer only after `verifyPaymentAndSave` succeeds.
 - Slot data can be edited directly in PostgreSQL/pgAdmin.
